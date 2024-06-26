@@ -90,11 +90,11 @@ public class FocusedViewController {
     /*
     Scanner scanner = new Scanner(System. in);
     System.out.print("Enter the signer's email address: \n");
-    //String signerEmail = "kelvinjust4school@gmail.com";
+    //String signerEmail = "testemailhere";
     String signerEmail = scanner. nextLine();
     this.email = signerEmail;
     System.out.print("Enter the signer's name: \n");
-    //String signerName = "kx";
+    //String signerName = "testnamehere";
     String signerName = scanner. nextLine();
     this.username = signerName;
 
@@ -109,12 +109,6 @@ public class FocusedViewController {
     FileInputStream fis = new FileInputStream(configFileName);
     prop.load(fis);
     try {
-      Scanner scanner = new Scanner(System.in);
-      System.out.print("Enter the signer's email address: \n");
-      String signerEmail = "kelvinjust4school@gmail.com";//scanner. nextLine();
-      System.out.print("Enter the signer's name: \n");
-      String signerName = "kx"; //scanner. nextLine();
-
       // Get access token and accountId
       ApiClient apiClient = authenticationService.authenticateWithJWTClient();
       OAuthToken oAuthToken = authenticationService.getAuthTokenFocusedView(apiClient, prop, focusedViewService.privateKey());

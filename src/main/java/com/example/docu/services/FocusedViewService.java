@@ -88,7 +88,8 @@ public class FocusedViewService {
       String signerEmail,String signerName, String returnUrl, String signerClientId, String pingUrl
   ) throws ApiException {
     String pingFrequency = "600";
-    String linkToLauncher = "http://localhost:8080";
+    // TODO: might have to change this to be assigned
+    String linkToLauncher = "http://localhost:8081";
     String linkToDocuSignServer = "https://apps-d.docusign.com";
 
     RecipientViewRequest viewRequest = new RecipientViewRequest();
