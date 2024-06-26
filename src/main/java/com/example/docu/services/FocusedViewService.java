@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.security.PrivateKey;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Properties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -38,8 +39,15 @@ public class FocusedViewService {
   @Value("${docusign.key.path}")
   private String keyPath;
 
-  public PrivateKey privateKey() throws Exception {
+  @Value("${docusign.config.path}")
+  private String configPath;
+
+  public byte[] privateKey() throws Exception {
     return AuthenticationService.loadPrivateKey(keyPath);
+  }
+
+  public Properties properties() throws Exception {
+    return AuthenticationService.loadConfigFile(configPath);
   }
 
   public String[] sendEnvelopeWithFocusedView(

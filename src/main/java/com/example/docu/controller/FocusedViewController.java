@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.Scanner;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
@@ -62,46 +63,42 @@ public class FocusedViewController {
   private static final String BEARER_AUTHENTICATION = "Bearer ";
 
   @Autowired
+  private Environment env;
+
+  @Autowired
   private AuthenticationService authenticationService;
 
   @Autowired
   private FocusedViewService focusedViewService;
 
-  @Autowired
-  private Environment env;
+  @Value("${docusign.user.email}")
+  private String userEmail;
 
-  private String username;
-
-  private String email;
-
-  private Properties configProperties;
+  @Value("${docusign.user.name}")
+  private String userName;
 
   static String DevCenterPage = "https://developers.docusign.com/platform/auth/consent";
 
 
-  public FocusedViewController() {
-    try {
-      Properties prop = new Properties();
-      Scanner scanner = new Scanner(System. in);
-      System.out.println("File path to config:\n");
-      String fileName =  scanner.nextLine();//this.getClass().getResource("/app.config").getPath();
-      FileInputStream fis = new FileInputStream(fileName);
-      prop.load(fis);
-      this.configProperties = prop;
-      System.out.print("Enter the signer's email address: \n");
-      //String signerEmail = "kelvinjust4school@gmail.com";
-      String signerEmail = scanner. nextLine();
-      this.email = signerEmail;
-      System.out.print("Enter the signer's name: \n");
-      //String signerName = "kx";
-      String signerName = scanner. nextLine();
-      this.username = signerName;
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+ // private String email;
 
+  //private String username;
+
+  private Properties configProperties;
+
+  public FocusedViewController() {
+    /*
+    Scanner scanner = new Scanner(System. in);
+    System.out.print("Enter the signer's email address: \n");
+    //String signerEmail = "kelvinjust4school@gmail.com";
+    String signerEmail = scanner. nextLine();
+    this.email = signerEmail;
+    System.out.print("Enter the signer's name: \n");
+    //String signerName = "kx";
+    String signerName = scanner. nextLine();
+    this.username = signerName;
+
+     */
   }
 
   @CrossOrigin(origins = "http://localhost:4200")
@@ -120,7 +117,7 @@ public class FocusedViewController {
 
       // Get access token and accountId
       ApiClient apiClient = authenticationService.authenticateWithJWTClient();
-      OAuthToken oAuthToken = authenticationService.getAuthTokenFocusedView(apiClient, prop);
+      OAuthToken oAuthToken = authenticationService.getAuthTokenFocusedView(apiClient, prop, focusedViewService.privateKey());
 
       String accessToken = oAuthToken.getAccessToken();
       UserInfo userInfo = apiClient.getUserInfo(accessToken);
@@ -156,19 +153,19 @@ public class FocusedViewController {
   public EmbeddedSigningResponse getAccess() throws IOException {
     try
     {
-
-
+      Properties prop = focusedViewService.properties();
+      this.configProperties = prop;
       // Get access token and accountId
       ApiClient apiClient = authenticationService.authenticateWithJWTClient();
-      OAuthToken oAuthToken = authenticationService.getAuthTokenFocusedView(apiClient, this.configProperties);
+      OAuthToken oAuthToken = authenticationService.getAuthTokenFocusedView(apiClient, prop, focusedViewService.privateKey());
       String accessToken = oAuthToken.getAccessToken();
       UserInfo userInfo = apiClient.getUserInfo(accessToken);
       String accountId = userInfo.getAccounts().get(0).getAccountId();
       apiClient.addDefaultHeader("Authorization", "Bearer " + accessToken);
 
       String[] envelopeIdAndRedirectUrl = focusedViewService.sendEnvelopeWithFocusedView(
-          this.email,
-          this.username,
+          userEmail,
+          userName,
           apiClient,
           accountId,
           "localhost:8080/ds-return");
@@ -189,7 +186,7 @@ public class FocusedViewController {
         try
         {
           System.out.println ("Consent required, please provide consent in browser window and then run this app again.");
-          Desktop.getDesktop().browse(new URI("https://account-d.docusign.com/oauth/auth?response_type=code&scope=impersonation%20signature&client_id=" + this.configProperties.getProperty("clientId") + "&redirect_uri=" + DevCenterPage));
+          Desktop.getDesktop().browse(new URI("https://account-d.docusign.com/oauth/auth?response_type=code&scope=impersonation%20signature&client_id=" + configProperties.getProperty("clientId") + "&redirect_uri=" + DevCenterPage));
         }
         catch (Exception e)
         {

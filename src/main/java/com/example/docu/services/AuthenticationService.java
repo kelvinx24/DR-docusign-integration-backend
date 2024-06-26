@@ -14,10 +14,14 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthenticationService {
+
+  private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
 
   public AuthenticationService() {
   }
@@ -28,14 +32,13 @@ public class AuthenticationService {
     return apiClient;
   }
 
-  public static OAuthToken getOAuthToken(ApiClient apiClient, Properties prop, List<String> scopes)
+  public static OAuthToken getOAuthToken(ApiClient apiClient, Properties prop, List<String> scopes, byte[] pk)
       throws ApiException, IOException {
-    byte[] privateKeyBytes = Files.readAllBytes(Paths.get(prop.getProperty("rsaKeyFile")));
     OAuthToken oAuthToken = apiClient.requestJWTUserToken(
         prop.getProperty("clientId"),
         prop.getProperty("userId"),
         scopes,
-        privateKeyBytes,
+        pk,
         3600);
 
     return oAuthToken;
@@ -48,16 +51,20 @@ public class AuthenticationService {
     return scopes;
   }
 
-  public static OAuthToken getAuthTokenFocusedView(ApiClient apiClient, Properties prop) throws IOException, ApiException {
-    return getOAuthToken(apiClient, prop, getFocusedViewScopes());
+  public static OAuthToken getAuthTokenFocusedView(ApiClient apiClient, Properties prop, byte[] pk) throws IOException, ApiException {
+    return getOAuthToken(apiClient, prop, getFocusedViewScopes(), pk);
   }
 
-  public static PrivateKey loadPrivateKey(String privateKeyFile)
-      throws Exception {
-    byte[] privateKeyBytes = Files.readAllBytes(Paths.get(privateKeyFile));
-    PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(privateKeyBytes);
-    KeyFactory kf = KeyFactory.getInstance("RSA");
-    return kf.generatePrivate(spec);
+  public static byte[] loadPrivateKey(String privateKeyFile) {
+    try {
+      byte[] privateKeyBytes = Files.readAllBytes(Paths.get(privateKeyFile));
+      return privateKeyBytes;
+    } catch (Exception ex) {
+     AuthenticationService.log.debug("Error loading private key: " + ex.getMessage());
+    }
+
+    return null;
+
   }
 
   public static Properties loadConfigFile(String configFilePath)  {
